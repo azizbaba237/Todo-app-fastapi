@@ -1,8 +1,11 @@
 from sqlalchemy import create_engine 
 from sqlalchemy.orm import sessionmaker, declarative_base
+from dotenv import load_dotenv
+import os 
 
-DATABSE_URL = "postgresql://apitacheuser:motDePasse@localhost:5432/apitache"
-engine = create_engine(DATABSE_URL)
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
 
 sessionLocal = sessionmaker(
     autocommit=False, 
