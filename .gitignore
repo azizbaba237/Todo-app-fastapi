@@ -1,0 +1,23 @@
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Base de données locale
+*.db
+*.sqlite3
+
+# Éditeur de code
+.vscode/
+.idea/
+*.DS_Store
+
+# Node (si jamais tu en as)
+node_modules/
