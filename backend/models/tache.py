@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Date 
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy.orm import relationship
 from db.database import Base 
 
 class Tache(Base):
@@ -11,3 +12,6 @@ class Tache(Base):
     date_echeance = Column(Date)
     date_creation = Column(Date)
     date_modification = Column(Date)
+    id_utilisateur = Column(Integer, ForeignKey("utilisateur.id"))
+    
+    proprietaire_tache = relationship("Utilisateur", back_populates="taches")
