@@ -5,6 +5,7 @@ from schemas.tacheMiseAjour import TacheMiseAjour
 from sqlalchemy.orm import Session
 from crud import tache
 from db.database import get_db
+from auth.routes import router as auth_router
 
 
 app = FastAPI(title= "API de gestion des taches",
@@ -18,6 +19,8 @@ app = FastAPI(title= "API de gestion des taches",
               - Supprimer une tache 
               """
               ) 
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 origins = [
     "http://127.0.0.1:5500"
