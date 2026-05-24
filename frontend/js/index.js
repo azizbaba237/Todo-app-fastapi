@@ -1,4 +1,4 @@
-import { donneTaches, supprimer } from "../services/apiTache.js";
+import { donneTacheDetail, supprimer } from "../services/apiTache.js";
 
 /**
  * Analyse l'URL actuelle pour détecter les paramètres de retour (Query Params)
@@ -60,7 +60,7 @@ async function genererListe() {
 
     try {
         // 3. Récupération des données depuis l'API FastAPI
-        const dataTaches = await donneTaches();
+        const dataTaches = await donneTacheDetail();
 
         // 4. Boucle de génération des lignes pour chaque tâche
         for (let dataElement of dataTaches) {
