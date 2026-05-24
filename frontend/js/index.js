@@ -1,17 +1,16 @@
-import { donneTacheDetail, supprimer } from "../services/apiTache.js";
+import { listerTaches } from "../services/apiTache.js";
+import { connexionUtilisateur } from "../services/apiTacheAuth.js";
 
 /**
- * Analyse l'URL actuelle pour détecter les paramètres de retour (Query Params)
- * et affiche un message flash d'information à l'utilisateur dans l'élément #info.
+ * Affiche uniquement le message flash d'information à partir de l'URL
  */
 function genererinfo() {
     let info = document.getElementById("info");
-    if (!info) return; // Sécurité si l'élément n'existe pas dans le HTML
+    if (!info) return;
 
     const url = new URL(document.location);
     const searchParams = url.searchParams;
 
-    // Aiguillage des messages selon le paramètre reçu dans l'URL
     if (searchParams.has('modifier')) {
         info.innerText = "La tâche n°" + searchParams.get('modifier') + " a été modifiée avec succès.";
     } else if (searchParams.has('annulerModifier')) {
@@ -23,33 +22,32 @@ function genererinfo() {
     } else if (searchParams.has('supprimerTache')) {
         info.innerText = "La tâche n°" + searchParams.get('supprimerTache') + " a été supprimée avec succès.";
     } else {
-        info.innerText = ""; // Aucun paramètre, on laisse la zone vide
+        info.innerText = "";
     }
 }
 
 /**
- * Récupère la liste de toutes les tâches depuis l'API, construit 
- * dynamiquement un tableau HTML et l'injecte dans la page d'accueil.
+ * Génère la liste des tâches (Scénario : Utilisateur Connecté)
  */
 async function genererListe() {
+    // 1. On nettoie l'interface : on enlève le formulaire de connexion inutile
+    let blocConnexion = document.getElementById("connexion");
+    if (blocConnexion) blocConnexion.remove();
+
     let tachesContainer = document.getElementById("taches");
     if (!tachesContainer) return;
 
-    // 1. Nettoyage de la zone pour éviter les doublons lors des rafraîchissements
     while (tachesContainer.firstChild) {
         tachesContainer.removeChild(tachesContainer.firstChild);
     }
 
-    // 2. Création de la structure du tableau et de sa ligne d'en-tête
     let tachesTable = document.createElement("table");
     let tachesTableEntete = document.createElement("tr");
 
-    // Colonne Titre
     let thTitre = document.createElement("th");
     thTitre.innerHTML = "Titre";
     tachesTableEntete.appendChild(thTitre);
 
-    // CORRECTION : Création de deux éléments 'th' distincts pour éviter le décalage des colonnes
     let thModifier = document.createElement("th");
     tachesTableEntete.appendChild(thModifier);
 
@@ -59,24 +57,19 @@ async function genererListe() {
     tachesTable.appendChild(tachesTableEntete);
 
     try {
-        // 3. Récupération des données depuis l'API FastAPI
-        const dataTaches = await donneTacheDetail();
+        const dataTaches = await listerTaches();
 
-        // 4. Boucle de génération des lignes pour chaque tâche
         for (let dataElement of dataTaches) {
             let tachesTableLigne = document.createElement("tr");
 
-            // Cellule du titre
             let tachesTableLigneTitre = document.createElement("td");
             tachesTableLigneTitre.innerHTML = dataElement.titre;
             tachesTableLigne.appendChild(tachesTableLigneTitre);
 
-            // Cellule du lien "Modifier" (Aiguille vers la page de détail avec l'ID)
             let tachesTableLigneModifier = document.createElement("td");
             tachesTableLigneModifier.innerHTML = `<a href="detail.html?tache=${dataElement.id}">Modifier</a>`;
             tachesTableLigne.appendChild(tachesTableLigneModifier);
 
-            // Cellule du bouton "Supprimer"
             let tachesTableLigneSupprimer = document.createElement("td");
             let lienSupprimer = document.createElement("a");
             lienSupprimer.innerText = "Supprimer";
@@ -84,17 +77,12 @@ async function genererListe() {
             lienSupprimer.id = "Suppr" + dataElement.id;
             lienSupprimer.classList.add("LienSuppression");
 
-            // Écouteur d'événement pour intercepter le clic et appeler l'API de suppression
             lienSupprimer.addEventListener('click', async function (e) {
-                e.preventDefault(); // Empêche la navigation immédiate du lien
-
-                // Demande de confirmation à l'utilisateur
+                e.preventDefault();
                 if (confirm(`Voulez-vous vraiment supprimer la tâche "${dataElement.title || dataElement.titre}" ?`)) {
                     try {
-                        // Appel de la fonction de suppression dans apiTache.js
+                        // Assure-toi que la fonction supprimer() est bien importée ou définie quelque part
                         await supprimer(dataElement.id);
-
-                        // Redirection avec le paramètre de succès pour déclencher le message flash
                         window.location.href = "index.html?supprimerTache=" + dataElement.id;
                     } catch (error) {
                         console.error("Erreur lors de la suppression :", error);
@@ -105,12 +93,9 @@ async function genererListe() {
 
             tachesTableLigneSupprimer.appendChild(lienSupprimer);
             tachesTableLigne.appendChild(tachesTableLigneSupprimer);
-
-            // Ajout de la ligne complète dans le tableau
             tachesTable.appendChild(tachesTableLigne);
         }
 
-        // 5. Injection du tableau finalisé dans le conteneur HTML
         tachesContainer.appendChild(tachesTable);
 
     } catch (error) {
@@ -119,6 +104,40 @@ async function genererListe() {
     }
 }
 
-// --- INITIALISATION DE LA PAGE ---
-genererinfo();
-genererListe();
+/**
+ * Gère le formulaire de connexion (Scénario : Utilisateur Non Connecté)
+ */
+function genererConnexion() {
+    // 1. On nettoie l'interface : on enlève la partie contenu/liste des tâches
+    let blocContenu = document.getElementById("contenu");
+    if (blocContenu) blocContenu.remove();
+
+    let lienConnexion = document.getElementById("lienConnexion");
+    if (lienConnexion) {
+        lienConnexion.addEventListener("click", async (e) => {
+            e.preventDefault();
+            let utilisateur = {
+                pseudonyme: document.getElementById("pseudo").value,
+                mot_de_passe: document.getElementById("passe").value
+            }
+            try {
+                await connexionUtilisateur(utilisateur);
+                window.location.href = "index.html";
+            } catch (error) {
+                console.error("Échec de la connexion :", error);
+                alert("Identifiants incorrects ou problème serveur.");
+            }
+        });
+    }
+}
+
+// --- INITIALISATION UNIQUE ET CONTROLÉE DE LA PAGE ---
+genererinfo(); // Affiche le message flash s'il y en a un
+
+if (localStorage.getItem("access_token")) {
+    // Si connecté : on génère la liste (qui va supprimer le bloc connexion)
+    genererListe();
+} else {
+    // Si non connecté : on prépare la connexion (qui va supprimer le bloc contenu)
+    genererConnexion();
+}

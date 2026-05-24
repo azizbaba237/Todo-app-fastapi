@@ -70,3 +70,30 @@ export async function modifier(idTache, tacheModifiee) {
 
     return await response.json();
 }
+
+/**
+ * Récupère la liste complète de TOUTES les tâches (GET).
+ * @returns {Promise<Array>} Un tableau contenant toutes les tâches.
+ */
+export async function listerTaches() {
+    const token = localStorage.getItem("access_token");
+
+    // 🔍 ESPION N°2 : Vérifie ce qui part réellement vers l'API
+    console.log("👉 Token extrait du LocalStorage pour l'envoi :", token);
+    
+    // Cette fois-on tape directement sur http://127.0.0.1:8000/taches/ sans ID
+    const response = await fetch(`${BASE_URL}/`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem("access_token")
+        }
+    });
+
+    if (!response.ok) {
+        console.error("Impossible de récupérer la liste des tâches");
+        throw new Error(`Erreur HTTP ! Statut : ${response.status}`);
+    }
+
+    return await response.json();
+}

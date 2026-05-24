@@ -4,8 +4,8 @@ from jose import JWTError, jwt
 
 SECRET_KEY = "cle super secrete"
 ALGORITHM = "HS256"
-ACCESS_EXPIRE_MINUTES = 1
-REFRESH_TOKEN_EXPIRE_DAYS = 15
+ACCESS_EXPIRE_MINUTES = 5
+REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 
 def create_access_token(data: dict):
@@ -16,7 +16,7 @@ def create_access_token(data: dict):
 
 def decode_access_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     
     except JWTError:
@@ -31,7 +31,7 @@ def create_refresh_token(data: dict):
 
 def decode_refresh_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     
     except JWTError:

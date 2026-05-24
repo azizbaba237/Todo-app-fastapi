@@ -11,7 +11,7 @@ from models.utilisateur import Utilisateur
 router = APIRouter()
 
 # Route register user
-@router.post("/register")
+@router.post("/register/")
 def register(user: UtilisateurCreation, db: Session = Depends(get_db)):
     user.mot_de_passe = hash_password(user.mot_de_passe)
     db_user = Utilisateur(pseudonyme= user.pseudonyme, email=user.email, mot_de_passe=user.mot_de_passe)
@@ -22,7 +22,7 @@ def register(user: UtilisateurCreation, db: Session = Depends(get_db)):
 
 
 # Login 
-@router.post("/login")
+@router.post("/login/")
 def Login(user: UtilisateurInfo, db : Session = Depends(get_db)):
     db_user = db.query(Utilisateur).filter(Utilisateur.pseudonyme == user.pseudonyme).first()
     if not db_user or not verify_password(user.mot_de_passe, db_user.mot_de_passe):
