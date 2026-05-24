@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from auth.jwt import create_access_token
+from auth.jwt import create_access_token, create_refresh_token, decode_refresh_token
 from schemas.utilisateurInfo import UtilisateurInfo
 from schemas.utilisateurCreation import UtilisateurCreation
 from sqlalchemy.orm import Session 
@@ -28,5 +28,22 @@ def Login(user: UtilisateurInfo, db : Session = Depends(get_db)):
     if not db_user or not verify_password(user.mot_de_passe, db_user.mot_de_passe):
         raise HTTPException(status_code=401, detail="identification invalide.")
     
-    access_token = create_access_token({"sub":str(db_user.id), "type": "access"})
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token  = create_access_token({"sub":str(db_user.id), "type": "access"})
+    refresh_token = create_refresh_token({"sub":str(db_user.id), "type": "refresh"})
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+
+# Refresh token route 
+@router.post("/refresh/")
+def refresh_token(token : str, db : Session = Depends(get_db)):
+    payload = decode_refresh_token(token)
+    if not payload :
+        raise HTTPException(status_code=401, detail="Refresh token invalide")
+    
+    id_user = payload.get("sub")
+    db_user = db.query(Utilisateur).filter(Utilisateur.id == id_user).first()
+    if not db_user :
+        raise HTTPException(status_code=401, detail="Utilisateur invalide")
+    
+    access_token  = create_access_token({"sub":str(db_user.id), "type": "access"})
+    refresh_token = create_refresh_token({"sub":str(db_user.id), "type": "refresh"})
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}

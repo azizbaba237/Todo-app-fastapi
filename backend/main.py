@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
+from auth.dependencies import get_current_user
+from models.utilisateur import Utilisateur
 from schemas.tacheCreation import TacheCreation
 from fastapi.middleware.cors import CORSMiddleware
 from schemas.tacheMiseAjour import TacheMiseAjour
@@ -39,9 +41,9 @@ app.add_middleware(
          summary="Récupérer toutes les taches",
          description="Toutes les taches de la BDD se retrouvent dans un JSON",
          response_description="Liste de toutes les taches au format JSON")
-def getAllTache(db: Session = Depends(get_db)):
+def getAllTache(current_user: Utilisateur = Depends(get_current_user), db: Session = Depends(get_db)):
     try:
-        db_tache = tache.getAllTache(db)
+        db_tache = tache.getAllTache(current_user, db)
     except Exception:
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
     return db_tache
@@ -59,9 +61,9 @@ def getTache(tache_id : int, db: Session = Depends(get_db)):
 
 # Ajouter une tache à la liste 
 @app.post("/taches/")
-def createTache(t : TacheCreation, db: Session = Depends(get_db)):  
+def createTache(t : TacheCreation, current_user: Utilisateur = Depends(get_current_user), db: Session = Depends(get_db)):  
     try:
-        db_tache = tache.createTache(t, db)
+        db_tache = tache.createTache(t, current_user,  db)
         return db_tache 
     except Exception:
         raise(HTTPException(status_code=500, detail="Erreur interne du serveur"))

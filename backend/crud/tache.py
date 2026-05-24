@@ -1,9 +1,10 @@
+from models.utilisateur import Utilisateur
 from sqlalchemy.orm import Session
 from schemas.tacheCreation import TacheCreation
 from models.tache import Tache
 from sqlalchemy.exc import SQLAlchemyError
 
-def createTache(tache : TacheCreation, db: Session):
+def createTache(tache : TacheCreation, current_user: Utilisateur, db: Session):
     """
     Crée une nouvelle tâche dans la base de données.
     """
@@ -15,7 +16,8 @@ def createTache(tache : TacheCreation, db: Session):
             etat = tache.etat.value, # Extraction de la valeur brute de l'Enum (ex: "A faire")
             date_echeance = tache.date_echeance,
             date_creation = tache.date_creation,
-            date_modification = tache.date_modification            
+            date_modification = tache.date_modification,
+            id_utilisateur = current_user.id
         )
         db.add(db_tache)          # Prépare l'insertion de l'objet
         db.commit()               # Valide la transaction dans la base de données
@@ -49,13 +51,13 @@ def updateTache(id : int, tache: TacheCreation, db: Session ):
         db.rollback()
         raise
 
-def getAllTache(db: Session):
+def getAllTache(current_user: Utilisateur, db: Session):
     """
     Récupère la liste complète de toutes les tâches.
     """
     try:
         # Exécute un SELECT * FROM taches
-        db_tache = db.query(Tache).all()
+        db_tache = db.query(Tache).filter(Tache.id_utilisateur == current_user.id).all() # Filtre pour ne récupérer que les tâches de l'utilisateur connecté
         return db_tache
     except SQLAlchemyError:
         raise
