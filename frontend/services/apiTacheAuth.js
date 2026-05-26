@@ -51,9 +51,6 @@ export async function connexionUtilisateur(infosUtilisateur) {
 
         const data = await response.json();
 
-        // 🔍 ESPION N°1 : Regarde exactement comment ton backend a nommé la clé du token !
-        console.log("👉 Réponse brute du serveur au Login :", data);
-
         localStorage.setItem("access_token", data.access_token);
 
         if (data.access_token) {
@@ -64,7 +61,6 @@ export async function connexionUtilisateur(infosUtilisateur) {
         }
 
     } catch (error) {
-        // Correction du log pour éviter le [object Object] anonyme
         console.error("Erreur lors de la connexion :", error.message);
         throw error;
     }

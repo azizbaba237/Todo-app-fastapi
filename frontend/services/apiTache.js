@@ -7,10 +7,12 @@ const BASE_URL = "http://127.0.0.1:8000/taches";
  * @returns {Promise<Object>} La tâche créée avec son ID généré par la base de données.
  */
 export async function ajouter(nouvelleTache) {
+    let token = localStorage.getItem("access_token");
     const response = await fetch(`${BASE_URL}/`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
         },
         body: JSON.stringify(nouvelleTache)
     });
@@ -34,11 +36,23 @@ export async function ajouter(nouvelleTache) {
  * @returns {Promise<Object>} L'objet de la tâche récupérée.
  */
 export async function donneTacheDetail(idTache) {
-    const response = await fetch(`${BASE_URL}/${idTache}`);
+    let token = localStorage.getItem("access_token");
+    try {
 
-    if (!response.ok) {
-        console.error(`Impossible de récupérer la tâche n°${idTache}`);
-        throw new Error(`Erreur HTTP ! Statut : ${response.status}`);
+        const response = await fetch(`${BASE_URL}/${idTache}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            }
+        });
+        if (!response.ok) {
+            console.error(`Impossible de récupérer la tâche n°${idTache}`);
+            throw new Error(`Erreur HTTP ! Statut : ${response.status}`);
+        }
+    } catch (error) {
+        console.error(`Erreur lors de la récupération de la tâche n°${idTache} :`, error);
+        throw error;
     }
 
     return await response.json();
@@ -51,10 +65,12 @@ export async function donneTacheDetail(idTache) {
  * @returns {Promise<Object>} La tâche mise à jour renvoyée par le serveur.
  */
 export async function modifier(idTache, tacheModifiee) {
+    let token = localStorage.getItem("access_token");
     const response = await fetch(`${BASE_URL}/${idTache}`, {
         method: "PUT", 
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
         },
         body: JSON.stringify(tacheModifiee)
     });
@@ -77,16 +93,11 @@ export async function modifier(idTache, tacheModifiee) {
  */
 export async function listerTaches() {
     const token = localStorage.getItem("access_token");
-
-    // 🔍 ESPION N°2 : Vérifie ce qui part réellement vers l'API
-    console.log("👉 Token extrait du LocalStorage pour l'envoi :", token);
-    
-    // Cette fois-on tape directement sur http://127.0.0.1:8000/taches/ sans ID
     const response = await fetch(`${BASE_URL}/`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + localStorage.getItem("access_token")
+            "Authorization": "Bearer " + token
         }
     });
 
